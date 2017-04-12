@@ -12,10 +12,7 @@
 #include <signal.h>
 #include <assert.h>
 
-void
-sigint_handler(
-								int
-								sig) {
+void sigint_handler(int sig) {
 
 								static int in= 0;
 
@@ -39,16 +36,42 @@ typedef struct {
 								int delete;
 								int exec;
 								int perm;
-								int type;
+								int hasType;
+								int hasName;
+								int hasPerm;
+								char type;
 }Options;
+
+void initOptions(Options *options) {
+	options->name = malloc(sizeof(char *));
+	options->print = 0;
+	options->delete = 0;
+	options->exec = 0;
+	options->hasName = 0;
+	options->hasType = 0;
+	options->hasType = 0;
+
+}
 
 int main(int argc, char const *argv[])
 {
 								Options options;
-
-								if(argc  < 3) {
+								initOptions(& options);
+								if(argc  < 5) {
 																printf("Invalid amount of arguments \n");
 																return 1;
+								}
+
+								if(strcmp(argv[2],"-name")==0){
+									options.hasName = 1;
+									options.name = argv[3];
+									printf("ola %s\n", options.name);
+								}
+
+								if (strcmp(argv[2], "-type") == 0) {
+									options.hasType = 1;
+									options.type = argv[3];
+									printf("ola\n");
 								}
 
 
