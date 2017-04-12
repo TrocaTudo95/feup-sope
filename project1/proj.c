@@ -55,12 +55,14 @@ void initOptions(Options *options) {
 
 int main(int argc, char const *argv[])
 {
-								Options options;
-								initOptions(& options);
+								
 								if(argc  < 5) {
 																printf("Invalid amount of arguments \n");
 																return 1;
 								}
+								char slash[2] = "/";
+								Options options;
+								initOptions(&options);
 
 								if(strcmp(argv[2],"-name")==0){
 									options.hasName = 1;
@@ -68,10 +70,17 @@ int main(int argc, char const *argv[])
 									printf("ola %s\n", options.name);
 								}
 
-								if (strcmp(argv[2], "-type") == 0) {
+								else if (strcmp(argv[2], "-type") == 0) {
 									options.hasType = 1;
 									options.type = argv[3];
-									printf("ola\n");
+								}
+
+								if (strcmp(argv[4], "-delete") == 0) {
+									options.delete = 1;
+								}
+								else if (strcmp(argv[4], "-print")==0) {
+									printf("in\n");
+									options.print = 1;
 								}
 
 
@@ -104,7 +113,6 @@ int main(int argc, char const *argv[])
 									{  //Se fores uma pasta entao da fork() e continua no loop senao imprime o ficheiro (que depois vamos filtrar)
 										int pid;
 										if ((pid = fork()) == 0) {
-											char slash[2] = "/";
 											char * new_str;
 											if ((new_str = malloc(strlen(path) + 1 + 1)) != NULL) {
 												new_str[0] = '\0'; // ensures the memory is an empty string
@@ -126,10 +134,19 @@ int main(int argc, char const *argv[])
 									}
 									else if (strcmp(directory_info->d_name, ".") != 0 && strcmp(directory_info->d_name, "..") != 0 && directory_info->d_type != DT_DIR) {
 									if (options.hasName == 1) {
-										printf("xau\n");
-										if (strcmp(directory_info->d_name, options.name)==0)
-											printf("File: %s   In path: %s \n", directory_info->d_name, path);
-
+										
+										if (strcmp(directory_info->d_name, options.name) == 0) {
+											printf("xau\n");
+											if (options.print == 1)
+												printf("File: %s   In path: %s \n", directory_info->d_name, path);
+											else if (options.delete == 1) {
+												char temp[256];
+												strcpy(temp, path);
+												strcat(temp, slash);
+												strcat(temp, directory_info->d_name);
+												execlp("rm", "-i", temp, NULL);
+											}
+										}
 									}
 								}
 
