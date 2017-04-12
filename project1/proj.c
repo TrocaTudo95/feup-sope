@@ -39,7 +39,7 @@ typedef struct {
 								int hasType;
 								int hasName;
 								int hasPerm;
-								char type;
+								char * type;
 }Options;
 
 void initOptions(Options *options) {
@@ -50,6 +50,7 @@ void initOptions(Options *options) {
 	options->hasName = 0;
 	options->hasType = 0;
 	options->hasType = 0;
+	options->type = malloc(sizeof(char *));
 
 }
 
@@ -130,26 +131,68 @@ int main(int argc, char const *argv[])
 											strcpy(path, new_str2);
 											current_dir = opendir(path);
 
+											///imprimir/apagar caso seja diretorio
+											if (options.hasType == 1) {
+												if (strcmp(options.type, "d") == 0) {
+													if (directory_info->d_type == DT_DIR) {
+														if (options.print == 1)
+														printf("Directory: %s   In path: %s \n", directory_info->d_name, path);
+														else if(options.delete==1)
+															execlp("rmdir", path, NULL);
+													}
+												}
+											}
+
 										}
 									}
 									else if (strcmp(directory_info->d_name, ".") != 0 && strcmp(directory_info->d_name, "..") != 0 && directory_info->d_type != DT_DIR) {
-									if (options.hasName == 1) {
-										
-										if (strcmp(directory_info->d_name, options.name) == 0) {
-											printf("xau\n");
-											if (options.print == 1)
-												printf("File: %s   In path: %s \n", directory_info->d_name, path);
-											else if (options.delete == 1) {
-												char temp[256];
-												strcpy(temp, path);
-												strcat(temp, slash);
-												strcat(temp, directory_info->d_name);
-												execlp("rm", "-i", temp, NULL);
+										///////////////////search by name//////////////////////////////
+										if (options.hasName == 1) {
+											if (strcmp(directory_info->d_name, options.name) == 0) {
+												printf("xau\n");
+												if (options.print == 1)
+													printf("File: %s   In path: %s \n", directory_info->d_name, path);
+												else if (options.delete == 1) {
+													char temp[256];
+													strcpy(temp, path);
+													strcat(temp, slash);
+													strcat(temp, directory_info->d_name);
+													execlp("rm", "-i", temp, NULL);
+												}
 											}
 										}
-									}
-								}
 
+										/////////////////////////////////////////////search by type//////////////
+										else if (options.hasType == 1) {
+											if (strcmp(options.type, "f") == 0) {
+												if (directory_info->d_type == DT_REG) {
+													if (options.print == 1)
+													printf("Regular file: %s   In path: %s \n", directory_info->d_name, path);
+													else if (options.delete == 1) {
+														char temp[256];
+														strcpy(temp, path);
+														strcat(temp, slash);
+														strcat(temp, directory_info->d_name);
+														execlp("rm", "-i", temp, NULL);
+													}
+												}
+											}
+											if (strcmp(options.type, "l") == 0) {
+												if (directory_info->d_type == DT_LNK) {
+													if (options.print == 1)
+													printf("Linked file: %s   In path: %s \n", directory_info->d_name, path);
+													else if (options.delete == 1) {
+														char temp[256];
+														strcpy(temp, path);
+														strcat(temp, slash);
+														strcat(temp, directory_info->d_name);
+														execlp("rm", "-i", temp, NULL);
+													}
+												}
+											}
+										}
+
+									}
 								}
 								(void) closedir (current_dir);
 
