@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -11,6 +12,8 @@
 #include <string.h>
 #include <signal.h>
 #include <assert.h>
+
+
 
 void sigint_handler(int sig) {
 
@@ -30,6 +33,7 @@ void sigint_handler(int sig) {
 }
 
 
+
 typedef struct {
 								char * name;
 								int print;
@@ -39,7 +43,9 @@ typedef struct {
 								int hasType;
 								int hasName;
 								int hasPerm;
+								int hasMode;
 								char * type;
+								int mode;
 }Options;
 
 void initOptions(Options *options) {
@@ -49,7 +55,7 @@ void initOptions(Options *options) {
 	options->exec = 0;
 	options->hasName = 0;
 	options->hasType = 0;
-	options->hasType = 0;
+	options->hasMode = 0;
 	options->type = malloc(sizeof(char *));
 
 }
@@ -68,25 +74,28 @@ int main(int argc, char const *argv[])
 								if(strcmp(argv[2],"-name")==0){
 									options.hasName = 1;
 									options.name = argv[3];
-									printf("ola %s\n", options.name);
 								}
 
 								else if (strcmp(argv[2], "-type") == 0) {
 									options.hasType = 1;
 									options.type = argv[3];
 								}
+								
+								else if (strcmp(argv[2], "-mode") == 0) {
+									options.hasMode = 1;
+									options.mode = strtol(argv[3], NULL, 10);
+								}
 
 								if (strcmp(argv[4], "-delete") == 0) {
 									options.delete = 1;
 								}
 								else if (strcmp(argv[4], "-print")==0) {
-									printf("in\n");
 									options.print = 1;
 								}
 
 
-								struct
-								sigaction action;
+								struct sigaction action;
+								struct stat sb;
 // prepare the 'sigaction struct'
 								action.sa_handler = sigint_handler;
 								sigemptyset(&action.sa_mask);
@@ -100,15 +109,6 @@ int main(int argc, char const *argv[])
 								char path[256];
 								strcpy(path, argv[1]);
 								current_dir = opendir(path);
-								//	dp = opendir ("./test")
-
-								char ** temp_argv;
-								size_t nr_bites;
-								nr_bites=sizeof(temp_argv)*argc;
-								//	temp_argv=(char**)malloc(nr_bites);
-								//	memcpy(temp_argv,argv,nr_bites);
-
-								//rewinddir(current_dir);  nao sei se é preciso aqui se não
 								while ((directory_info = readdir(current_dir)) != NULL) {
 									if (strcmp(directory_info->d_name, ".") != 0 && strcmp(directory_info->d_name, "..") != 0 && (directory_info->d_type == DT_DIR))
 									{  //Se fores uma pasta entao da fork() e continua no loop senao imprime o ficheiro (que depois vamos filtrar)
@@ -191,6 +191,27 @@ int main(int argc, char const *argv[])
 												}
 											}
 										}
+
+
+										///////////////////////////////////////////////search by permissions///////////////////////////
+										else if (options.hasMode == 1) {
+											char temp[256];
+											strcpy(temp, path);
+											strcat(temp, slash);
+											strcat(temp, directory_info->d_name);
+											stat(temp, &sb);
+											int mask = 0x01ff;
+											int mode = mask & sb.st_mode;
+											if (mode == options.mode) {
+												if (options.print == 1)
+													printf("file with permissions %d: %s   In path: %s \n", mode,directory_info->d_name, path);
+												else if (options.delete == 1)
+													execlp("rm", "-i", temp, NULL);
+											}
+											
+
+										}
+
 
 									}
 								}
